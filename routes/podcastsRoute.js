@@ -135,13 +135,50 @@ router.delete("/podcasts/:id", async (req, res) => {
   }
 });
 
-router.patch("/podcasts/:id", (req, res) => {
-  res.status(200).json({
-    status: "success",
-    data: {
-      tour: "<Ypdated tour here..>",
-    },
-  });
+// GET /podcasts/:id/episodes
+router.get("/podcasts/:id/episodes", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const podcast = await Podcast.findById(id);
+
+    if (!podcast) {
+      return res.status(404).json({ message: "Podcast not found" });
+    }
+
+    return res.status(200).json({
+      count: podcast.episodes.length,
+      data: podcast.episodes,
+    });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Server error" });
+  }
 });
+// PUT /podcasts/:podcastId/episodes/:episodeId
+router.put("/podcasts/:podcastId/episodes/:episodeId", async (req, res) => {
+  try {
+    const { podcastId, episodeId } = req.params;
+    const { episodeName, episodeDescription, episodeLink, episodeCover } = req.body;
+
+    const podcast = await Podcast.findById(podcastId);
+    if (!podcast) return res.status(404).json({ message: "Podcast not found" });
+
+    const episode = podcast.episodes.id(episodeId);
+    if (!episode) return res.status(404).json({ message: "Episode not found" });
+
+    episode.episodeName = episodeName;
+    episode.episodeDescription = episodeDescription;
+    episode.episodeLink = episodeLink;
+    episode.episodeCover = episodeCover;
+
+    await podcast.save();
+    return res.status(200).json({ message: "Episode updated", episode });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 
 export default router;
