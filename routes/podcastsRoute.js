@@ -11,7 +11,7 @@ const client = new MongoClient(mongoDBURL);
 // Set up Multer
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "../Front-End/public/");
+    cb(null, "./assets");
   },
   filename: function (req, file, cb) {
     cb(null, file.originalname);
