@@ -23,13 +23,14 @@ const upload = multer({ storage: storage });
 
 const uploadImages = upload.array("image");
 
-router.post("/articles", upload.none(), async (req, res) => {
+router.post("/articles", uploadImages, async (req, res) => {
   try {
     await client.connect();
     const db = client.db("test");
     const col = db.collection("articles");
 
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
+    const imageName = req.files.map((image) => image.filename);
 
     const newArticle = {
       title,
@@ -37,6 +38,7 @@ router.post("/articles", upload.none(), async (req, res) => {
       description,
       descriptionTrans,
       date,
+      image:imageName,
     };
 
     const p = await col.insertOne(newArticle);
@@ -82,12 +84,12 @@ router.get("/articles/:id", async (req, res) => {
 });
 
 // update an article in the database
-router.put("/articles/:id", async (req, res) => {
+router.put("/articles/:id", uploadImages, async (req, res) => {
   try {
     const { id } = req.params;
     console.log(id);
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
-
+const imageName = req.files.map((image) => image.filename);
     const update = {
       $set: {
         title,
@@ -95,6 +97,7 @@ router.put("/articles/:id", async (req, res) => {
         description,
         descriptionTrans,
         date,
+        image:imageName,
       },
       $inc: {
         views: 1,
