@@ -6,7 +6,7 @@ const articleSchema = mongoose.Schema({
   titleTrans: { type: String, required: false },
   description: { type: String, required: false },
   descriptionTrans: { type: String, required: false },
-  // image: [String],
+  image: [String],
   date: { type: String, required: false },
 });
 
