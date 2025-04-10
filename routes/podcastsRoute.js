@@ -154,6 +154,31 @@ router.get("/podcasts/:id/episodes", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// GET /podcasts/:podcastId/episodes/:episodeId
+router.get("/podcasts/:podcastId/episodes/:episodeId", async (req, res) => {
+  try {
+    const { podcastId, episodeId } = req.params;
+    const podcast = await Podcast.findById(podcastId);
+
+    if (!podcast) {
+      return res.status(404).json({ message: "Podcast not found" });
+    }
+
+    const episode = podcast.episodes.id(episodeId); // Mongoose subdocument magic ✨
+
+    if (!episode) {
+      return res.status(404).json({ message: "Episode not found" });
+    }
+
+    return res.status(200).json(episode);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 // PUT /podcasts/:podcastId/episodes/:episodeId
 router.put("/podcasts/:podcastId/episodes/:episodeId", async (req, res) => {
   try {
