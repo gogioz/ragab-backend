@@ -87,7 +87,7 @@ router.get("/podcasts/:id", async (req, res) => {
 });
 
 // update an article in the database
-router.put("/podcasts/:id", upload.single("cover"), async (req, res) => {
+router.put("/podcasts/:id", upload.single("episodeCover"), async (req, res) => {
   try {
     const database = client.db("test");
     const podcast = database.collection("podcasts");
