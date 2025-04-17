@@ -38,7 +38,10 @@ router.post("/articles", uploadImages, async (req, res) => {
     const col = db.collection("articles");
 
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
-    const imageName = req.files.map((image) => image.path);
+    const imageFiles = req.files["image"] || [];
+// const imagePaths = imageFiles.map((file) => file.path);
+
+    const imageName = imageFiles.map((image) => image.path);
 
     const newArticle = {
       title,
