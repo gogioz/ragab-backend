@@ -29,7 +29,7 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-const uploadImages = upload.array("image");
+const uploadImages = upload.fields([{ name: "image", maxCount: 30 }]);
 
 router.post("/articles", uploadImages, async (req, res) => {
   try {
