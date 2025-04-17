@@ -1,6 +1,8 @@
 // routes.js
 import express, { json } from "express";
 import { Podcast } from "../models/podcastModel.js";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
 
 const router = express.Router();
 import multer from "multer";
@@ -8,13 +10,20 @@ import multer from "multer";
 import { MongoClient, ObjectId } from "mongodb";
 import { mongoDBURL } from "../config.js";
 const client = new MongoClient(mongoDBURL);
+await client.connect();
 // Set up Multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./assets");
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
+cloudinary.config({
+  cloud_name: "dkpsmuui1",
+  api_key: "947953923368561",
+  api_secret: "GLBMPiZhWtBawM7Pgq0OH3GZprk",
+});
+
+// Set up Multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "ragab",
+    allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
@@ -32,21 +41,24 @@ router.post("/podcasts", uploadImages, async (req, res) => {
     const col = db.collection("podcasts");
     const { name, description, episodeName, episodeLink, episodeDescription } =
       req.body;
-    const podcastCoverName = req.files["cover"][0].filename;
-    const episodeCoverName = req.files["episodeCover"][0].filename;
+    const podcastCoverName = req.files["cover"][0].path;
+    const episodeCoverName = req.files["episodeCover"][0].path;
 
-    const episode = {
-      episodeName: episodeName,
-      episodeDescription: episodeDescription,
-      episodeLink: episodeLink,
-      episodeCover: episodeCoverName,
-    };
-    const newPodcast = {
-      name: name,
-      description: description,
+    const newPodcast = new Podcast({
+      name,
+      description,
       cover: podcastCoverName,
-      episodes: [episode],
-    };
+      episodes: [
+        {
+          episodeName,
+          episodeDescription,
+          episodeLink,
+          episodeCover: episodeCoverName,
+        },
+      ],
+    });
+    await newPodcast.save();
+
     const p = await col.insertOne(newPodcast);
 
     return res.send(p);
@@ -108,7 +120,7 @@ router.put("/podcasts/:id", upload.single("episodeCover"), async (req, res) => {
     };
     const { id } = req.params;
 
-    const filter = { _id: new ObjectId({ id }) };
+    const filter = { _id: new ObjectId(id) };
 
     // Update the document
 
@@ -178,12 +190,12 @@ router.get("/podcasts/:podcastId/episodes/:episodeId", async (req, res) => {
   }
 });
 
-
 // PUT /podcasts/:podcastId/episodes/:episodeId
 router.put("/podcasts/:podcastId/episodes/:episodeId", async (req, res) => {
   try {
     const { podcastId, episodeId } = req.params;
-    const { episodeName, episodeDescription, episodeLink, episodeCover } = req.body;
+    const { episodeName, episodeDescription, episodeLink, episodeCover } =
+      req.body;
 
     const podcast = await Podcast.findById(podcastId);
     if (!podcast) return res.status(404).json({ message: "Podcast not found" });
@@ -221,21 +233,26 @@ router.patch("/podcasts/:podcastId/episodes/:episodeId", async (req, res) => {
     }
 
     // Apply updates (only if the field exists in req.body)
-    if (updates.episodeName !== undefined) episode.episodeName = updates.episodeName;
-    if (updates.episodeDescription !== undefined) episode.episodeDescription = updates.episodeDescription;
-    if (updates.episodeLink !== undefined) episode.episodeLink = updates.episodeLink;
-    if (updates.episodeCover !== undefined) episode.episodeCover = updates.episodeCover;
+    if (updates.episodeName !== undefined)
+      episode.episodeName = updates.episodeName;
+    if (updates.episodeDescription !== undefined)
+      episode.episodeDescription = updates.episodeDescription;
+    if (updates.episodeLink !== undefined)
+      episode.episodeLink = updates.episodeLink;
+    if (updates.episodeCover !== undefined)
+      episode.episodeCover = updates.episodeCover;
 
     await podcast.save();
 
-    return res.status(200).json({ message: "Episode updated successfully", episode });
+    return res
+      .status(200)
+      .json({ message: "Episode updated successfully", episode });
   } catch (err) {
     console.error(err.message);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 });
-
-
-
 
 export default router;

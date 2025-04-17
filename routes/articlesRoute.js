@@ -4,18 +4,26 @@ import multer from "multer";
 
 import { MongoClient, ObjectId } from "mongodb";
 import { mongoDBURL } from "../config.js";
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+
 const client = new MongoClient(mongoDBURL);
+await client.connect();
 
 const router = express.Router();
 
+cloudinary.config({
+  cloud_name: "dkpsmuui1",
+  api_key: "947953923368561",
+  api_secret: "GLBMPiZhWtBawM7Pgq0OH3GZprk",
+});
 
 // Set up Multer
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./assets/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "ragab",
+    allowed_formats: ["jpg", "png", "jpeg"],
   },
 });
 
@@ -30,7 +38,7 @@ router.post("/articles", uploadImages, async (req, res) => {
     const col = db.collection("articles");
 
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
-    const imageName = req.files.map((image) => image.filename);
+    const imageName = req.files.map((image) => image.path);
 
     const newArticle = {
       title,
@@ -38,7 +46,7 @@ router.post("/articles", uploadImages, async (req, res) => {
       description,
       descriptionTrans,
       date,
-      image:imageName,
+      image: imageName,
     };
 
     const p = await col.insertOne(newArticle);
@@ -89,7 +97,7 @@ router.put("/articles/:id", uploadImages, async (req, res) => {
     const { id } = req.params;
     console.log(id);
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
-const imageName = req.files.map((image) => image.filename);
+    const imageName = req.files.map((image) => image.path);
     const update = {
       $set: {
         title,
@@ -97,7 +105,7 @@ const imageName = req.files.map((image) => image.filename);
         description,
         descriptionTrans,
         date,
-        image:imageName,
+        image: imageName,
       },
       $inc: {
         views: 1,
