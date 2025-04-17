@@ -95,9 +95,13 @@ router.get("/articles/:id", async (req, res) => {
 router.put("/articles/:id", uploadImages, async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
-    const imageName = req.files.map((image) => image.path);
+
+    console.log("BODY:", req.body);
+    console.log("FILES:", req.files);
+
+    const imageName = req.files?.map((image) => image.path) || [];
+
     const update = {
       $set: {
         title,
@@ -119,10 +123,11 @@ router.put("/articles/:id", uploadImages, async (req, res) => {
     const result = await article.updateOne(filter, update);
     return res.send(result);
   } catch (err) {
-    console.error(err.message);
+    console.error("UPDATE ERROR:", err.message);
     res.status(500).send({ message: err.message });
   }
 });
+
 // delete article from the database
 router.delete("/articles/:id", async (req, res) => {
   try {
