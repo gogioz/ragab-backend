@@ -43,24 +43,32 @@ router.post("/podcasts", uploadImages, async (req, res) => {
     const {
       name,
       description,
-      episodeName,
-      episodeDescription,
-      episodeLink,
+      episodes,  // This will be an array of episode details
     } = req.body;
 
-    const coverUrl        = req.files.cover[0].path;
-    const episodeCoverUrl = req.files.episodeCover[0].path;
+    // Handle file uploads
+    const coverUrl = req.files.cover[0].path;
 
+    // Map through episodes to handle the episode covers if they exist
+    const updatedEpisodes = episodes.map((episode, index) => {
+      const episodeCoverUrl = req.files[`episodeCover_${index}`]
+        ? req.files[`episodeCover_${index}`][0].path
+        : null;
+
+      return {
+        episodeName: episode.episodeName,
+        episodeDescription: episode.episodeDescription,
+        episodeLink: episode.episodeLink,
+        episodeCover: episodeCoverUrl,  // If episode cover exists, add it
+      };
+    });
+
+    // Create the new podcast
     const newPodcast = new Podcast({
       name,
       description,
-      cover:   coverUrl,
-      episodes: [{
-        episodeName,
-        episodeDescription,
-        episodeLink,
-        episodeCover: episodeCoverUrl,
-      }],
+      cover: coverUrl,
+      episodes: updatedEpisodes,  // Assign the array of episodes
     });
 
     await newPodcast.save();
@@ -71,6 +79,7 @@ router.post("/podcasts", uploadImages, async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 });
+
 
 // ─── GET ALL PODCASTS ─────────────────────────────────────────────────────────
 router.get("/podcasts", async (req, res) => {
