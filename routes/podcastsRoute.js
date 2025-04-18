@@ -148,6 +148,22 @@ router.post(
     res.status(201).json(podcast.episodes.at(-1));    // return the newly added episode
   }
 );
+// DELETE /podcasts/:podcastId
+router.delete("/podcasts/:podcastId", async (req, res) => {
+  try {
+    const { podcastId } = req.params;
+
+    // Find and delete the podcast
+    const podcast = await Podcast.findByIdAndDelete(podcastId);
+    if (!podcast) return res.status(404).json({ message: "Podcast not found" });
+
+    return res.json({ message: "Podcast deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting podcast:", err);
+    return res.status(500).json({ message: err.message });
+  }
+});
+
 
 
 export default router;
