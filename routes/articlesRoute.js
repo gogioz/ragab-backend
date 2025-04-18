@@ -31,36 +31,43 @@ const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024, 
 
 const uploadImages = upload.fields([{ name: "image", maxCount: 30 }]);
 
-router.post("/articles", uploadImages, async (req, res) => {
+// in routes/articlesRoute.js
+router.post("/articles", (req, res, next) => {
+  uploadImages(req, res, err => {
+    if (err) {
+      console.error("⛔️ Multer error:", err);
+      return res.status(400).json({ error: err.message });
+    }
+
+    // very first thing, log the incoming data:
+    console.log("🏷  req.body:", req.body);
+    console.log("📁 req.files:", req.files);
+    console.log("→ images array length:", (req.files.image || []).length);
+
+    next();  
+  });
+}, async (req, res) => {
   try {
-    await client.connect();
-    const db = client.db("test");
-    const col = db.collection("articles");
-
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
-    const imageFiles = req.files["image"] || [];
-// const imagePaths = imageFiles.map((file) => file.path);
-
-    const imageName = imageFiles.map((image) => image.path);
+    const imageFiles = req.files.image || [];
+    const imagePaths = imageFiles.map(f => f.path);
+    console.log("✔️ imagePaths:", imagePaths);
 
     const newArticle = {
-      title,
-      titleTrans,
-      description,
-      descriptionTrans,
-      date,
-      image: imageName,
+      title, titleTrans, description, descriptionTrans, date,
+      image: imagePaths
     };
 
-    const p = await col.insertOne(newArticle);
-    console.log("Inserted article:", newArticle);
-
-    return res.send(p);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send({ message: err.message });
+    const col = client.db("test").collection("articles");
+    const result = await col.insertOne(newArticle);
+    console.log("✅ Inserted:", newArticle);
+    res.status(201).json(result);
+  } catch (e) {
+    console.error("🔥 Server-side error in /articles:", e);
+    res.status(500).json({ error: e.message });
   }
 });
+
 
 // get all articles in databasee
 router.get("/articles", async (req, res) => {
