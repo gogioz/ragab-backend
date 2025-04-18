@@ -125,38 +125,29 @@ router.get("/podcasts/:podcastId/episodes/:episodeId", async (req, res) => {
 });
 
 // ─── PATCH (UPDATE) ONE EPISODE ───────────────────────────────────────────────
-router.patch(
-  "/podcasts/:podcastId/episodes/:episodeId",
-  upload.single("episodeCover"),  // optional new cover upload
+// POST /podcasts/:podcastId/episodes
+router.post(
+  "/podcasts/:podcastId/episodes",
+  upload.single("episodeCover"),
   async (req, res) => {
-    try {
-      const { podcastId, episodeId } = req.params;
-      const updates = req.body;
+    const { podcastId } = req.params;
+    const { episodeName, episodeDescription, episodeLink } = req.body;
+    const episodeCover = req.file.path;               // Cloudinary URL
 
-      const podcast = await Podcast.findById(podcastId);
-      if (!podcast) return res.status(404).json({ message: "Podcast not found" });
+    const podcast = await Podcast.findById(podcastId);
+    if (!podcast) return res.status(404).json({ message: "Not found" });
 
-      const episode = podcast.episodes.id(episodeId);
-      if (!episode) return res.status(404).json({ message: "Episode not found" });
+    podcast.episodes.push({
+      episodeName,
+      episodeDescription,
+      episodeLink,
+      episodeCover,
+    });
 
-      // Text fields
-      ["episodeName","episodeDescription","episodeLink"].forEach(field => {
-        if (updates[field] !== undefined) episode[field] = updates[field];
-      });
-
-      // Optional new cover
-      if (req.file) {
-        episode.episodeCover = req.file.path;
-      }
-
-      await podcast.save();
-      return res.json(episode);
-
-    } catch (err) {
-      console.error("Error updating episode:", err);
-      return res.status(500).json({ message: err.message });
-    }
+    await podcast.save();
+    res.status(201).json(podcast.episodes.at(-1));    // return the newly added episode
   }
 );
+
 
 export default router;
