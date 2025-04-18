@@ -32,11 +32,15 @@ const upload = multer({
 });
 
 // Expect two fields: `cover` (1 file) and `episodeCover` (1 file)
-const uploadImages = upload.fields([
-  { name: "cover",        maxCount: 1 },
-  { name: "episodeCover", maxCount: 1 },
-]);
-
+const uploadImages = (req, res, next) => {
+  // Handle podcast cover and episode covers dynamically
+  upload.fields([
+    { name: "cover", maxCount: 1 }, // For podcast cover
+    { name: "episodeCover_0", maxCount: 1 }, // For episode 1 cover
+    { name: "episodeCover_1", maxCount: 1 }, // For episode 2 cover (etc.)
+    // Add more if needed, e.g., episodeCover_2, episodeCover_3...
+  ])(req, res, next);
+};
 // ─── CREATE A NEW PODCAST ────────────────────────────────────────────────────
 router.post("/podcasts", uploadImages, async (req, res) => {
   try {
