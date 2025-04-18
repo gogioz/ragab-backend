@@ -32,21 +32,7 @@ const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024, 
 const uploadImages = upload.fields([{ name: "image", maxCount: 30 }]);
 
 // in routes/articlesRoute.js
-router.post("/articles", (req, res, next) => {
-  uploadImages(req, res, err => {
-    if (err) {
-      console.error("⛔️ Multer error:", err);
-      return res.status(400).json({ error: err.message });
-    }
-
-    // very first thing, log the incoming data:
-    console.log("🏷  req.body:", req.body);
-    console.log("📁 req.files:", req.files);
-    console.log("→ images array length:", (req.files.image || []).length);
-
-    next();  
-  });
-}, async (req, res) => {
+router.post("/articles",uploadImages, async (req, res) => {
   try {
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
     const imageFiles = req.files.image || [];
