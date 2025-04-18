@@ -104,11 +104,13 @@ router.get("/articles/:id", async (req, res) => {
 // update an article in the database
 router.put("/articles/:id", uploadImages, async (req, res) => {
   try {
+      console.log("🏷  req.body:", req.body);
+    console.log("📁 req.files:", req.files);
     const { id } = req.params;
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
 
 
-    const imageName = req.files?.map((image) => image.path) || [];
+    const imageName = req.files.map((image) => image.path) || [];
 
     const update = {
       $set: {
