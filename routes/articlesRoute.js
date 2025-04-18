@@ -108,9 +108,11 @@ router.put("/articles/:id", uploadImages, async (req, res) => {
     console.log("📁 req.files:", req.files);
     const { id } = req.params;
     const { title, titleTrans, description, descriptionTrans, date } = req.body;
+     const imageFiles = req.files.image || [];
+    // const imagePaths = imageFiles.map(f => f.path);
 
 
-    const imageName = req.files.map((image) => image.path) || [];
+    const imageName = imageFiles.map((image) => image.path) || [];
 
     const update = {
       $set: {
